@@ -6,6 +6,7 @@ from .language_model import LanguageModelFeatureExtractor
 from .speech_model import SpeechFeatureExtractor
 from .simple_features import WordRateFeatureExtractor
 from .embeddings import StaticEmbeddingFeatureExtractor
+from .vision_language_model import VisionLanguageModelFeatureExtractor
 from ..utils import ActivationCache, SpeechActivationCache
 
 
@@ -30,7 +31,7 @@ class FeatureExtractorFactory:
         """Create a feature extractor based on modality and model name.
 
         Args:
-            modality: The type of feature extractor ('language_model', 'speech', 'wordrate', 'embeddings')
+            modality: The type of feature extractor ('language_model', 'speech', 'wordrate', 'embeddings', vision_language_model)
             model_name: The specific model name (e.g., 'gpt2-small', 'word2vec', 'openai/whisper-tiny')
             config: Configuration dictionary for the extractor
             cache_dir: Directory for caching
@@ -65,7 +66,7 @@ class FeatureExtractorFactory:
         print(f"this is the config: {config}")
 
         # Add caching capability
-        if modality in ["language_model", "speech"]:
+        if modality in ["language_model", "speech", "vision_language_model"]:
             extractor.cache_dir = cache_dir
             if modality == "speech":
                 extractor.speech_cache = SpeechActivationCache(cache_dir=cache_dir)
@@ -103,8 +104,12 @@ class FeatureExtractorFactory:
 
         if modality == "language_model":
             return cls._extract_language_model_features(
-                extractor, assembly, story, idx, layer_idx, lookback, dataset_type
+                extractor, assembly, idx, layer_idx, lookback, dataset_type
             )
+        elif modality == "vision_language_model":
+            return cls._extract_vision_language_model_features(
+                extractor, assembly, idx, layer_idx
+        )
         elif modality == "speech":
             return cls._extract_speech_features(
                 extractor, assembly, story, idx, layer_idx, dataset_type
@@ -129,6 +134,8 @@ class FeatureExtractorFactory:
             return "wordrate"
         elif isinstance(extractor, StaticEmbeddingFeatureExtractor):
             return "embeddings"
+        elif isinstance(extractor, VisionLanguageModelFeatureExtractor):
+            return "vision_language_model"  
         else:
             raise ValueError(f"Unknown extractor type: {type(extractor)}")
 
@@ -187,6 +194,37 @@ class FeatureExtractorFactory:
             )
 
             return all_features[layer_idx]
+        
+    @classmethod
+    def _extract_vision_language_model_features(
+        cls,
+        extractor,
+        assembly,
+        # story: str,
+        idx: int,
+        layer_idx: Optional[int] = None,
+    ) -> np.ndarray:
+        """Extract features from vision-language models (like CLIP).
+        
+        Args:
+            extractor: VisionLanguageModelFeatureExtractor instance
+            assembly: Assembly containing the data
+            idx: Story index
+            layer_idx: Optional layer index to extract from
+            
+        Returns:
+            np.ndarray: Extracted features
+        """
+        # Get stimuli (text) from assembly
+        texts = assembly.get_stimuli()[idx]
+        
+        # Extract features
+        if layer_idx is not None:
+            features = extractor.extract_features(texts, layer_idx=layer_idx)
+        else:
+            features = extractor.extract_features(texts)
+
+        return features
 
     @classmethod
     def _extract_speech_features(
