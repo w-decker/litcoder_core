@@ -105,8 +105,8 @@ class FeatureExtractorFactory:
 
         if modality == "language_model":
             return cls._extract_language_model_features(
-                extractor, assembly, idx, layer_idx, lookback, dataset_type
-            )
+                extractor, assembly, story, idx, layer_idx, lookback, dataset_type
+            )   
         elif modality == "vision_language_model":
             return cls._extract_vision_language_model_features(
                 extractor, assembly, idx, layer_idx
