@@ -18,6 +18,7 @@ class FeatureExtractorFactory:
         "speech": SpeechFeatureExtractor,
         "wordrate": WordRateFeatureExtractor,
         "embeddings": StaticEmbeddingFeatureExtractor,
+        "vision_language_model": VisionLanguageModelFeatureExtractor,
     }
 
     @classmethod
@@ -217,8 +218,15 @@ class FeatureExtractorFactory:
         """
         # Get stimuli (text) from assembly
         texts = assembly.get_stimuli()[idx]
-        
-        # Extract features
+
+        lookback = getattr(extractor, 'lookback', None)
+    
+        # If lookback is specified, limit context window
+        if lookback is not None and lookback > 0:
+            # Take only the last 'lookback' items
+            texts = texts[-lookback:]
+
+    # Extract features
         if layer_idx is not None:
             features = extractor.extract_features(texts, layer_idx=layer_idx)
         else:
