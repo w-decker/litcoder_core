@@ -5,6 +5,10 @@ from encoding.models.nested_cv import NestedCVModel
 from encoding.trainer import AbstractTrainer
 import logging
 
+import os
+os.environ['TRANSFORMERS_CACHE'] = "/storage/home/hcoda1/4/jdecker37/scratch/transformers_cache"
+
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
