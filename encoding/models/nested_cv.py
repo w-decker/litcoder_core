@@ -82,13 +82,13 @@ class NestedCVModel(BasePredictivityModel):
 
         # Determine device - use GPU if available and requested
 
+        device = "cpu"
         if use_gpu:
             if torch.backends.mps.is_available():
                 device = "mps:0"
             elif torch.cuda.is_available():
                 device = "cuda"
-        else:
-             device = "cpu"
+                
         logger.info(f"Using device: {device}")
         logger.info(f"Folding type: {folding_type}")
 
